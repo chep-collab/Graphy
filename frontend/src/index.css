@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-slate-100 dark:bg-zinc-900 text-slate-900 dark:text-white;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  @apply transition-colors duration-300;
+}
+
+body {
+  @apply transition-colors duration-300;
+}
