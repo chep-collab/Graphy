@@ -14,10 +14,13 @@ API_VERSION = "0.2.0"
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "sales.csv"
 FRONTEND_BUILD_DIR = Path(__file__).resolve().parent.parent / "frontend" / "build"
 
+# ✅ Updated: Allow local dev + deployed frontend
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    os.getenv("FRONTEND_ORIGIN", ""),  # set FRONTEND_ORIGIN in production
+    "https://graphy-3.onrender.com",
+     
+    
 ]
 
 # ----- Init -----
@@ -25,7 +28,7 @@ app = FastAPI(title=API_TITLE, version=API_VERSION)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o for o in ALLOWED_ORIGINS if o],
+    allow_origins=ALLOWED_ORIGINS,  # ✅ Allow these origins
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -84,14 +87,12 @@ def get_kpis():
 
     total_revenue = float(df["revenue"].sum())
 
-    # Monthly growth: last vs previous
     if len(monthly) >= 2:
         last, prev = monthly.iloc[-1]["revenue"], monthly.iloc[-2]["revenue"]
         monthly_growth_pct = ((last - prev) / prev * 100.0) if prev else 0.0
     else:
         monthly_growth_pct = 0.0
 
-    # Churn rate overall
     total_churned = int(df["churned"].sum())
     total_customers = int(df["customers"].sum())
     churn_rate_pct = (total_churned / total_customers * 100.0) if total_customers else 0.0
@@ -131,4 +132,3 @@ def get_customer_trend():
     return [CustomerTrend(date=row["date"].strftime("%Y-%m-%d"),
                           customers=int(row["customers"]))
             for _, row in trend.iterrows()]
-

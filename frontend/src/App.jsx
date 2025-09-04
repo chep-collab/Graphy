@@ -13,20 +13,41 @@ import {
 import { DollarSign, Users, Moon, Sun } from "lucide-react";
 import KpiCard from "./components/KpiCard";
 
-// ✅ Set API base URL
-const API_BASE = "https://graphy-2.onrender.com"; // Replace with your Render backend URL for production
+// ✅ Backend URL
+const API_BASE = "https://graphy-5.onrender.com";
 
 function App() {
   const [theme, setTheme] = useState("light");
+
+  // Backend data
   const [kpis, setKpis] = useState(null);
   const [revenueByMonth, setRevenueByMonth] = useState([]);
   const [revenueByRegion, setRevenueByRegion] = useState([]);
-  const [sparklineData, setSparklineData] = useState({
-    totalRevenue: [],
-    monthlyGrowth: [],
-    churnRate: [],
-    customers: [],
-  });
+
+  // Fetch data from backend
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [kpiRes, monthlyRes, regionRes] = await Promise.all([
+          fetch(`${API_BASE}/api/kpis`),
+          fetch(`${API_BASE}/api/revenue/monthly`),
+          fetch(`${API_BASE}/api/revenue/region`),
+        ]);
+
+        const kpiData = await kpiRes.json();
+        const monthlyData = await monthlyRes.json();
+        const regionData = await regionRes.json();
+
+        setKpis(kpiData);
+        setRevenueByMonth(monthlyData);
+        setRevenueByRegion(regionData);
+      } catch (err) {
+        console.error("❌ API fetch error:", err);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   // ✅ Theme init & toggle
   useEffect(() => {
@@ -41,29 +62,6 @@ function App() {
     localStorage.setItem("theme", newTheme);
     document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
-
-  // ✅ Fetch live data from backend
-  useEffect(() => {
-    Promise.all([
-      fetch(`${API_BASE}/api/kpis`).then(res => res.json()),
-      fetch(`${API_BASE}/api/revenue/monthly`).then(res => res.json()),
-      fetch(`${API_BASE}/api/revenue/region`).then(res => res.json())
-    ])
-    .then(([kpiJson, monthJson, regionJson]) => {
-      setKpis(kpiJson);
-      setRevenueByMonth(monthJson);
-      setRevenueByRegion(regionJson);
-
-      // Prepare sparkline data
-      setSparklineData({
-        totalRevenue: monthJson.map(d => ({ value: d.revenue })),
-        monthlyGrowth: monthJson.map((d,i)=> i===0?0:((d.revenue-monthJson[i-1].revenue)/monthJson[i-1].revenue)*100),
-        churnRate: [{value: 5.1},{value:4.8},{value:4.3},{value:4.0},{value:3.81}], // Optional: replace with real data
-        customers: [{value:2800},{value:3200},{value:3600},{value:3800},{value:4012}] // Optional
-      });
-    })
-    .catch(err => console.error("API fetch error:", err));
-  }, []);
 
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -116,7 +114,7 @@ function App() {
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          {kpis && (
+          {kpis ? (
             <>
               <KpiCard
                 label="Total Revenue"
@@ -124,7 +122,7 @@ function App() {
                 icon={DollarSign}
                 trend="up"
                 change={12.5}
-                chartData={sparklineData.totalRevenue}
+                chartData={[]} // Backend could provide sparkline later
               />
               <KpiCard
                 label="Monthly Growth"
@@ -132,7 +130,7 @@ function App() {
                 suffix="%"
                 trend="up"
                 change={8.3}
-                chartData={sparklineData.monthlyGrowth}
+                chartData={[]}
               />
               <KpiCard
                 label="Churn Rate"
@@ -140,7 +138,7 @@ function App() {
                 suffix="%"
                 trend="down"
                 change={4.1}
-                chartData={sparklineData.churnRate}
+                chartData={[]}
               />
               <KpiCard
                 label="Total Customers"
@@ -148,9 +146,11 @@ function App() {
                 icon={Users}
                 trend="up"
                 change={6.7}
-                chartData={sparklineData.customers}
+                chartData={[]}
               />
             </>
+          ) : (
+            <p>Loading KPIs...</p>
           )}
         </div>
 

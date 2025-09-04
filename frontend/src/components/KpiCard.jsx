@@ -1,6 +1,12 @@
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { motion } from "framer-motion";
-import { ResponsiveContainer, LineChart, Line, Tooltip, Area } from "recharts";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  Tooltip,
+  Area,
+} from "recharts";
 
 export default function KpiCard({
   label,
@@ -9,8 +15,7 @@ export default function KpiCard({
   icon: Icon,
   trend,
   chartData,
-  change, // % change vs last month
-  dataKey = "value" // allows dynamic backend keys
+  change, // 📊 % change vs last month
 }) {
   const trendColor =
     trend === "up"
@@ -24,6 +29,7 @@ export default function KpiCard({
       ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
       : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
 
+  // Unique gradient ID so each KPI card is isolated
   const gradientId = `sparklineGradient-${label.replace(/\s+/g, "")}`;
 
   return (
@@ -81,7 +87,7 @@ export default function KpiCard({
         </motion.div>
       )}
 
-      {/* Sparkline Chart */}
+      {/* Sparkline Chart with Area + Gradient */}
       {chartData && (
         <div className="h-16">
           <ResponsiveContainer width="100%" height="100%">
@@ -116,16 +122,18 @@ export default function KpiCard({
                   return null;
                 }}
               />
+              {/* Area under line */}
               <Area
                 type="monotone"
-                dataKey={dataKey}
+                dataKey="value"
                 stroke="none"
                 fill={`url(#${gradientId})`}
               />
+              {/* Sparkline line */}
               <Line
                 type="monotone"
-                dataKey={dataKey}
-                stroke={trend === "down" ? "#ef4444" : "#22c55e"}
+                dataKey="value"
+                stroke={`url(#${gradientId})`}
                 strokeWidth={trend === "down" ? 3.5 : 2.5}
                 dot={false}
                 activeDot={{ r: 5 }}
@@ -137,5 +145,4 @@ export default function KpiCard({
     </motion.div>
   );
 }
-
 
