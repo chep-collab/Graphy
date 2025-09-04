@@ -19,8 +19,6 @@ ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://graphy-3.onrender.com",
-     
-    
 ]
 
 # ----- Init -----
@@ -28,7 +26,7 @@ app = FastAPI(title=API_TITLE, version=API_VERSION)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,  # ✅ Allow these origins
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,6 +62,16 @@ class CustomerTrend(BaseModel):
     date: str
     customers: int
 
+# ----- Welcome route -----
+@app.get("/")
+def root():
+    return {
+        "message": "Welcome to Mos Insights API 🚀",
+        "docs": "/docs",
+        "health": "/api/health",
+        "version": API_VERSION,
+    }
+
 # ----- Endpoints -----
 @app.get("/api/health")
 def health():
@@ -78,9 +86,11 @@ def health():
 def get_kpis():
     monthly = (
         df.groupby("month")
-        .agg(revenue=("revenue", "sum"),
-             customers=("customers", "sum"),
-             churned=("churned", "sum"))
+        .agg(
+            revenue=("revenue", "sum"),
+            customers=("customers", "sum"),
+            churned=("churned", "sum"),
+        )
         .reset_index()
         .sort_values("month")
     )
@@ -112,14 +122,18 @@ def get_revenue_by_month():
         .reset_index()
         .sort_values("month")
     )
-    return [RevenueByMonth(month=row["month"], revenue=float(row["revenue"]))
-            for _, row in monthly.iterrows()]
+    return [
+        RevenueByMonth(month=row["month"], revenue=float(row["revenue"]))
+        for _, row in monthly.iterrows()
+    ]
 
 @app.get("/api/revenue/region", response_model=List[RevenueByRegion])
 def get_revenue_by_region():
     region = df.groupby("region")["revenue"].sum().reset_index()
-    return [RevenueByRegion(region=row["region"], revenue=float(row["revenue"]))
-            for _, row in region.iterrows()]
+    return [
+        RevenueByRegion(region=row["region"], revenue=float(row["revenue"]))
+        for _, row in region.iterrows()
+    ]
 
 @app.get("/api/customers/trend", response_model=List[CustomerTrend])
 def get_customer_trend():
@@ -129,6 +143,7 @@ def get_customer_trend():
         .reset_index()
         .sort_values("date")
     )
-    return [CustomerTrend(date=row["date"].strftime("%Y-%m-%d"),
-                          customers=int(row["customers"]))
-            for _, row in trend.iterrows()]
+    return [
+        CustomerTrend(date=row["date"].strftime("%Y-%m-%d"), customers=int(row["customers"]))
+        for _, row in trend.iterrows()
+    ]
