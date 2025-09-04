@@ -14,7 +14,7 @@ import { DollarSign, Users, Moon, Sun } from "lucide-react";
 import KpiCard from "./components/KpiCard";
 
 // ✅ Set API base URL
-const API_BASE = import.meta.env.VITE_API_BASE; // Replace with your Render backend URL for production
+const API_BASE = "https://graphy-2.onrender.com"; // Replace with your Render backend URL for production
 
 function App() {
   const [theme, setTheme] = useState("light");
