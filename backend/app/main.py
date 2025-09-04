@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List
 import pandas as pd
@@ -11,6 +12,7 @@ from datetime import datetime
 API_TITLE = "Mos Insights API"
 API_VERSION = "0.2.0"
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "sales.csv"
+FRONTEND_BUILD_DIR = Path(__file__).resolve().parent.parent / "frontend" / "build"
 
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -28,6 +30,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ----- Serve React frontend -----
+if FRONTEND_BUILD_DIR.exists():
+    app.mount("/", StaticFiles(directory=FRONTEND_BUILD_DIR, html=True), name="frontend")
+else:
+    print("⚠️ Warning: React build folder not found!")
 
 # ----- Load + preprocess data -----
 df = pd.read_csv(DATA_PATH, parse_dates=["date"])
@@ -123,3 +131,4 @@ def get_customer_trend():
     return [CustomerTrend(date=row["date"].strftime("%Y-%m-%d"),
                           customers=int(row["customers"]))
             for _, row in trend.iterrows()]
+
